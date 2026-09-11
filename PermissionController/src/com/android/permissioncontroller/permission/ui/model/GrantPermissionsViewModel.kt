@@ -846,7 +846,7 @@ class GrantPermissionsViewModel(
         if (!isStateUnknown(groupState.state)) {
             return
         }
-        val affectedPermissions = affectedForegroundPermissions ?: groupState.affectedPermissions
+        val affectedPermissions = affectedForegroundPermissions?.toSet() ?: groupState.affectedPermissions
 
         // 1. Conceder formalmente el permiso runtime para que la app crea que fue otorgado con éxito
         grantForegroundRuntimePermissions(
