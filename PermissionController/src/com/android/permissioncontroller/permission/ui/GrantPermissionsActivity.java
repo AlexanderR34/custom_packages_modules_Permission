@@ -87,6 +87,7 @@ import com.android.permissioncontroller.DeviceUtils;
 import com.android.permissioncontroller.R;
 import com.android.permissioncontroller.ecm.EnhancedConfirmationStatsLogUtils;
 import com.android.permissioncontroller.permission.ui.auto.GrantPermissionsAutoViewHandler;
+import static com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_MOCK;
 import com.android.permissioncontroller.permission.ui.model.DenyButton;
 import com.android.permissioncontroller.permission.ui.model.GrantPermissionsViewModel;
 import com.android.permissioncontroller.permission.ui.model.GrantPermissionsViewModel.RequestInfo;
@@ -128,7 +129,7 @@ public class GrantPermissionsActivity extends FragmentActivity
 
     public static final String ANNOTATION_ID = "link";
 
-    public static final int NEXT_BUTTON = 15;
+    public static final int NEXT_BUTTON = 16;
     public static final int ALLOW_BUTTON = 0;
     public static final int ALLOW_ALWAYS_BUTTON = 1; // Used in auto
     public static final int ALLOW_FOREGROUND_BUTTON = 2;
@@ -145,6 +146,7 @@ public class GrantPermissionsActivity extends FragmentActivity
     // button to cancel a request for more data with a picker
     public static final int DONT_ALLOW_MORE_SELECTED_BUTTON = 13;
     public static final int LINK_TO_PERMISSION_RATIONALE = 14;
+    public static final int ALLOW_MOCK_BUTTON = 15;
 
     public static final int NEXT_LOCATION_DIALOG = 6;
     public static final int LOCATION_ACCURACY_LAYOUT = 0;
@@ -893,14 +895,14 @@ public class GrantPermissionsActivity extends FragmentActivity
         ArraySet<Integer> buttons = new ArraySet<>();
         switch (prompt) {
             case BASIC, STORAGE_SUPERGROUP_PRE_Q, STORAGE_SUPERGROUP_Q_TO_S ->
-                    buttons.add(ALLOW_BUTTON);
-            case FG_ONLY, SETTINGS_LINK_FOR_BG ->  buttons.add(ALLOW_FOREGROUND_BUTTON);
+                    buttons.addAll(Arrays.asList(ALLOW_BUTTON, ALLOW_MOCK_BUTTON));
+            case FG_ONLY, SETTINGS_LINK_FOR_BG ->  buttons.addAll(Arrays.asList(ALLOW_FOREGROUND_BUTTON, ALLOW_MOCK_BUTTON));
             case ONE_TIME_FG, SETTINGS_LINK_WITH_OT, LOCATION_TWO_BUTTON_COARSE_HIGHLIGHT,
                     LOCATION_TWO_BUTTON_FINE_HIGHLIGHT, LOCATION_COARSE_ONLY,
                     LOCATION_FINE_UPGRADE ->
-                buttons.addAll(Arrays.asList(ALLOW_FOREGROUND_BUTTON, ALLOW_ONE_TIME_BUTTON));
+                buttons.addAll(Arrays.asList(ALLOW_FOREGROUND_BUTTON, ALLOW_ONE_TIME_BUTTON, ALLOW_MOCK_BUTTON));
             case SELECT_PHOTOS, SELECT_MORE_PHOTOS ->
-                buttons.addAll(Arrays.asList(ALLOW_ALL_BUTTON, ALLOW_SELECTED_BUTTON));
+                buttons.addAll(Arrays.asList(ALLOW_ALL_BUTTON, ALLOW_SELECTED_BUTTON, ALLOW_MOCK_BUTTON));
         }
 
         switch (denyButton) {
@@ -1258,6 +1260,9 @@ public class GrantPermissionsActivity extends FragmentActivity
                 break;
             case GRANTED_ONE_TIME:
                 clickedButton = 1 << ALLOW_ONE_TIME_BUTTON;
+                break;
+            case GRANTED_MOCK:
+                clickedButton = 1 << ALLOW_MOCK_BUTTON;
                 break;
             case LINKED_TO_SETTINGS:
                 clickedButton = 1 << LINK_TO_SETTINGS;

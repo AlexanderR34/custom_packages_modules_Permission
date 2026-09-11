@@ -97,6 +97,7 @@ import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandle
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_ALWAYS
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_FOREGROUND_ONLY
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_ONE_TIME
+import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_MOCK
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_USER_SELECTED
 import com.android.permissioncontroller.permission.ui.ManagePermissionsActivity
 import com.android.permissioncontroller.permission.ui.ManagePermissionsActivity.EXTRA_RESULT_PERMISSION_INTERACTED
@@ -743,6 +744,12 @@ class GrantPermissionsViewModel(
                     doNotAskAgain = false,
                 )
             }
+            GRANTED_MOCK -> {
+                onPermissionGrantResultMock(
+                    groupState,
+                    affectedForegroundPermissions,
+                )
+            }
             GRANTED_USER_SELECTED,
             DENIED_MORE -> {
                 grantUserSelectedVisualGroupPermissions(groupState)
@@ -828,6 +835,71 @@ class GrantPermissionsViewModel(
             groupState.affectedPermissions,
             true,
             PERMISSION_GRANT_REQUEST_RESULT_REPORTED__RESULT__PHOTOS_SELECTED,
+        )
+    }
+
+    @SuppressLint("NewApi", "MissingPermission")
+    private fun onPermissionGrantResultMock(
+        groupState: GroupState,
+        affectedForegroundPermissions: List<String>?,
+    ) {
+        if (!isStateUnknown(groupState.state)) {
+            return
+        }
+        val affectedPermissions = affectedForegroundPermissions ?: groupState.affectedPermissions
+
+        // 1. Conceder formalmente el permiso runtime para que la app crea que fue otorgado con éxito
+        grantForegroundRuntimePermissions(
+            app,
+            groupState.group,
+            affectedPermissions,
+            isOneTime = false,
+        )
+
+        // 2. Forzar inmediatamente el modo de la operación en AppOpsManager a MODE_IGNORED para el paquete y UID
+        val aom = app.getSystemService(android.app.AppOpsManager::class.java)
+        val packageName = groupState.group.packageInfo.packageName
+        val uid = groupState.group.packageInfo.uid
+
+        for (permName in affectedPermissions) {
+            val op = android.app.AppOpsManager.permissionToOp(permName)
+            if (op != null && aom != null) {
+                try {
+                    aom.setUidMode(op, uid, android.app.AppOpsManager.MODE_IGNORED)
+                    aom.setMode(op, uid, packageName, android.app.AppOpsManager.MODE_IGNORED)
+                } catch (e: Exception) {
+                    Log.e(LOG_TAG, "Failed to set AppOp MODE_IGNORED for op $op and pkg $packageName", e)
+                }
+            }
+        }
+
+        // Si incluye ubicación, habilitar flag de ubicación simulada/aislada en Settings.Secure
+        if (groupState.group.permGroupName == LOCATION ||
+            affectedPermissions.contains(ACCESS_FINE_LOCATION) ||
+            affectedPermissions.contains(ACCESS_COARSE_LOCATION)
+        ) {
+            try {
+                android.provider.Settings.Secure.putInt(
+                    app.contentResolver,
+                    "fake_loc_enabled_$packageName",
+                    1,
+                )
+                android.provider.Settings.Secure.putInt(
+                    app.contentResolver,
+                    "location_spoof_pkg_$packageName",
+                    1,
+                )
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, "Failed to persist fake location setting for $packageName", e)
+            }
+        }
+
+        groupState.state = STATE_GRANTED
+        reportButtonClickResult(
+            groupState,
+            affectedPermissions,
+            true,
+            PERMISSION_GRANT_REQUEST_RESULT_REPORTED__RESULT__USER_GRANTED,
         )
     }
 

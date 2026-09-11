@@ -154,6 +154,11 @@
                     style="@style/PermissionGrantButtonAllowAllExpressive" />
 
                 <com.android.permissioncontroller.permission.ui.widget.SecureButton
+                    android:id="@+id/permission_allow_mock_button"
+                    android:text="@string/grant_dialog_button_mock"
+                    style="@style/PermissionGrantButtonAllowExpressive" />
+
+                <com.android.permissioncontroller.permission.ui.widget.SecureButton
                     android:id="@+id/permission_deny_button"
                     android:text="@string/grant_dialog_button_deny"
                     style="@style/PermissionGrantButtonDenyExpressive" />

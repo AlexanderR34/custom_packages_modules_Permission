@@ -53,6 +53,7 @@ import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.A
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.ALLOW_ALWAYS_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.ALLOW_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.ALLOW_FOREGROUND_BUTTON
+import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.ALLOW_MOCK_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.ALLOW_ONE_TIME_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.ALLOW_SELECTED_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.COARSE_RADIO_BUTTON
@@ -63,6 +64,8 @@ import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.D
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.DIALOG_WITH_FINE_LOCATION_ONLY
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.DONT_ALLOW_MORE_SELECTED_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.FINE_RADIO_BUTTON
+import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.LINK_TO_PERMISSION_RATIONALE
+import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.LINK_TO_SETTINGS
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.LOCATION_ACCURACY_LAYOUT
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.NEXT_BUTTON
 import com.android.permissioncontroller.permission.ui.GrantPermissionsActivity.NEXT_LOCATION_DIALOG
@@ -77,6 +80,7 @@ import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandle
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.DENIED_MORE
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_ALWAYS
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_FOREGROUND_ONLY
+import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_MOCK
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_ONE_TIME
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.GRANTED_USER_SELECTED
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler.ResultListener
@@ -420,6 +424,20 @@ class GrantPermissionsViewHandlerImpl(
                         mActivity.resources.getString(R.string.grant_dialog_button_deny)
                 }
             }
+            if (pos == ALLOW_MOCK_BUTTON && buttonVisibilities[pos]) {
+                if (
+                    locationVisibilities[LOCATION_ACCURACY_LAYOUT] ||
+                        groupName == android.Manifest.permission_group.LOCATION
+                ) {
+                    buttons[pos]?.text =
+                        mActivity.resources.getString(
+                            R.string.grant_dialog_button_mock_location
+                        )
+                } else {
+                    buttons[pos]?.text =
+                        mActivity.resources.getString(R.string.grant_dialog_button_mock)
+                }
+            }
             buttons[pos]?.requestLayout()
         }
     }
@@ -683,6 +701,17 @@ class GrantPermissionsViewHandlerImpl(
                     GRANTED_ONE_TIME,
                 )
             }
+            ALLOW_MOCK_BUTTON -> {
+                view.performAccessibilityAction(
+                    AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS,
+                    null,
+                )
+                resultListener.onPermissionGrantResult(
+                    groupName,
+                    affectedForegroundPermissions,
+                    GRANTED_MOCK,
+                )
+            }
             ALLOW_SELECTED_BUTTON -> {
                 view.performAccessibilityAction(
                     AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS,
@@ -790,6 +819,7 @@ class GrantPermissionsViewHandlerImpl(
                 NO_UPGRADE_OT_AND_DONT_ASK_AGAIN_BUTTON,
             )
             BUTTON_RES_ID_TO_NUM.put(R.id.permission_allow_all_button, ALLOW_ALL_BUTTON)
+            BUTTON_RES_ID_TO_NUM.put(R.id.permission_allow_mock_button, ALLOW_MOCK_BUTTON)
             BUTTON_RES_ID_TO_NUM.put(R.id.permission_allow_selected_button, ALLOW_SELECTED_BUTTON)
             BUTTON_RES_ID_TO_NUM.put(
                 R.id.permission_dont_allow_more_selected_button,

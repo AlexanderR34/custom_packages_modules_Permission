@@ -58,6 +58,8 @@
     <string name="grant_dialog_button_allow_one_time" msgid="2618088516449706391">"Solo esta vez"</string>
     <string name="grant_dialog_button_allow_background" msgid="8236044729434367833">"Permitir siempre"</string>
     <string name="grant_dialog_button_allow_all_files" msgid="4955436994954829894">"Permitir gestionar todos los archivos"</string>
+    <string name="grant_dialog_button_mock">"Dar permisos falsos"</string>
+    <string name="grant_dialog_button_mock_location">"Dar ubicación falsa"</string>
     <string name="grant_dialog_button_allow_media_only" msgid="4832877658422573832">"Permitir acceso al contenido multimedia"</string>
     <string name="app_permissions_breadcrumb" msgid="5136969550489411650">"Aplicaciones"</string>
     <string name="app_permissions" msgid="3369917736607944781">"Permisos de aplicaciones"</string>

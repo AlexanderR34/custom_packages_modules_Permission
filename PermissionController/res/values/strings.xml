@@ -158,6 +158,12 @@
     <!-- Title for the dialog button to allow a permission grant for all files. [CHAR LIMIT=60]  -->
     <string name="grant_dialog_button_allow_all_files">Allow management of all files</string>
 
+    <!-- Title for the dialog button to give fake/isolated permissions. [CHAR LIMIT=60] -->
+    <string name="grant_dialog_button_mock">Give fake permissions</string>
+
+    <!-- Title for the dialog button to give fake location specifically. [CHAR LIMIT=60] -->
+    <string name="grant_dialog_button_mock_location">Give fake location</string>
+
     <!-- Title for the dialog button to allow a permission grant for media files only. [CHAR LIMIT=60]  -->
     <string name="grant_dialog_button_allow_media_only">Allow access to media files</string>
 
