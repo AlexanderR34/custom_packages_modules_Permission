@@ -856,28 +856,31 @@ class GrantPermissionsViewModel(
             isOneTime = false,
         )
 
-        // 2. Forzar inmediatamente el modo de la operación en AppOpsManager a MODE_IGNORED para el paquete y UID
+        // 2. Ajustar el modo de la operación en AppOpsManager
         val aom = app.getSystemService(android.app.AppOpsManager::class.java)
         val packageName = groupState.group.packageInfo.packageName
         val uid = groupState.group.packageInfo.uid
+
+        val isLocationGroup = groupState.group.permGroupName == LOCATION ||
+            affectedPermissions.contains(ACCESS_FINE_LOCATION) ||
+            affectedPermissions.contains(ACCESS_COARSE_LOCATION)
 
         for (permName in affectedPermissions) {
             val op = android.app.AppOpsManager.permissionToOp(permName)
             if (op != null && aom != null) {
                 try {
-                    aom.setUidMode(op, uid, android.app.AppOpsManager.MODE_IGNORED)
-                    aom.setMode(op, uid, packageName, android.app.AppOpsManager.MODE_IGNORED)
+                    val isLoc = permName == ACCESS_FINE_LOCATION || permName == ACCESS_COARSE_LOCATION
+                    val mode = if (isLoc) android.app.AppOpsManager.MODE_ALLOWED else android.app.AppOpsManager.MODE_IGNORED
+                    aom.setUidMode(op, uid, mode)
+                    aom.setMode(op, uid, packageName, mode)
                 } catch (e: Exception) {
-                    Log.e(LOG_TAG, "Failed to set AppOp MODE_IGNORED for op $op and pkg $packageName", e)
+                    Log.e(LOG_TAG, "Failed to set AppOp for op $op and pkg $packageName", e)
                 }
             }
         }
 
-        // Si incluye ubicación, habilitar flag de ubicación simulada/aislada en Settings.Secure
-        if (groupState.group.permGroupName == LOCATION ||
-            affectedPermissions.contains(ACCESS_FINE_LOCATION) ||
-            affectedPermissions.contains(ACCESS_COARSE_LOCATION)
-        ) {
+        // Si incluye ubicación, habilitar flag de ubicación simulada/aislada en Settings.Secure y asignar coordenadas aleatorias por defecto
+        if (isLocationGroup) {
             try {
                 android.provider.Settings.Secure.putInt(
                     app.contentResolver,
@@ -889,6 +892,34 @@ class GrantPermissionsViewModel(
                     "location_spoof_pkg_$packageName",
                     1,
                 )
+
+                val currentCoords = android.provider.Settings.Secure.getString(
+                    app.contentResolver,
+                    "fake_loc_coords_$packageName",
+                )
+                if (currentCoords.isNullOrEmpty()) {
+                    val presets = arrayOf(
+                        "35.689500,139.691700,40.0,5.0",   // Tokio
+                        "40.712800,-74.006000,10.0,5.0",   // Nueva York
+                        "48.856600,2.352200,35.0,5.0",     // París
+                        "40.416800,-3.703800,650.0,5.0",   // Madrid
+                        "19.432600,-99.133200,2240.0,5.0", // Ciudad de México
+                        "51.507400,-0.127800,15.0,5.0",    // Londres
+                        "37.774900,-122.419400,16.0,5.0",  // San Francisco
+                        "41.902800,12.496400,21.0,5.0",    // Roma
+                    )
+                    val randomPreset = presets[kotlin.math.abs(packageName.hashCode()) % presets.size]
+                    android.provider.Settings.Secure.putString(
+                        app.contentResolver,
+                        "fake_loc_coords_$packageName",
+                        randomPreset,
+                    )
+                    android.provider.Settings.Secure.putString(
+                        app.contentResolver,
+                        "location_spoof_coords_$packageName",
+                        randomPreset,
+                    )
+                }
             } catch (e: Exception) {
                 Log.e(LOG_TAG, "Failed to persist fake location setting for $packageName", e)
             }
